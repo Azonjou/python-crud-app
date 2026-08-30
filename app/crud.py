@@ -7,13 +7,16 @@ from starlette import status
 
 app = FastAPI()
 
+class MessageCreate(BaseModel):
+    content: str
+
 class Message(BaseModel):
     id: int
     content: str
 
 message_db: list[Message] = [Message(id=0, content="First post in FastAPI")]
 
-@app.get("/messages", response_model=List[Message])
+@app.get("/messages", response_model=list[Message])
 async def read_messages() -> list[Message]:
     return message_db
 
@@ -25,20 +28,20 @@ async def read_message(message_id: int) -> Message:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
 
 @app.post("/messages", response_model=Message, status_code=status.HTTP_201_CREATED)
-async def create_message(message: Message) -> Message:
-    if any(msg.id == message.id for msg in message_db):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Message already exists")
-    message_db.append(message)
-    return message
+async def create_message(message_create: MessageCreate) -> Message:
+    # Генерируем новый ID на основе максимального существующего
+    next_id = max((msg.id for msg in message_db), default=-1) + 1
+    new_message = Message(id = next_id, content = message_create.content)
+    message_db.append(new_message)
+    return new_message
 
 @app.put("/messages/{message_id}", status_code=status.HTTP_200_OK, response_model=Message)
-async def update_message(message_id: int, message: Message) -> Message:
-    if message.id != message_id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The ID in the request does not match the ID in the message")
+async def update_message(message_id: int, message_create: MessageCreate) -> Message:
     for i, message in enumerate(message_db):
         if message.id == message.id:
-            message_db[i] = message
-            return message
+            new_message = Message(id=message_id, content = message_create.content)
+            message_db[i] = new_message
+            return new_message
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
 
 @app.delete("/messages/{message_id}", status_code=status.HTTP_200_OK)
