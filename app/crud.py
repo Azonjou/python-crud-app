@@ -1,7 +1,4 @@
-from ast import List
-
 from fastapi import FastAPI, HTTPException, Request, Form
-from fastapi.params import Body
 from pydantic import BaseModel
 from starlette import status
 from starlette.responses import HTMLResponse
@@ -48,7 +45,7 @@ async def create_message(message_create: MessageCreate) -> Message:
 @app.put("/messages/{message_id}", status_code=status.HTTP_200_OK, response_model=Message)
 async def update_message(message_id: int, message_create: MessageCreate) -> Message:
     for i, message in enumerate(message_db):
-        if message.id == message.id:
+        if message.id == message_id:
             new_message = Message(id=message_id, content = message_create.content)
             message_db[i] = new_message
             return new_message
@@ -109,6 +106,18 @@ async def read_message(request: Request, message_id: int):
             )
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
 
+@app.post("/web/messages/{message_id}", response_class=HTMLResponse)
+async def update_web_message(request: Request, message_id: int, content: str = Form(...)):
+    for message in message_db:
+        if message.id == message_id:
+            new_message = Message(id=message_id, content = content)
+            message_db[message_id] = new_message
+            return templates.TemplateResponse(
+                request=request,
+                name="detail.html",
+                context={"message": new_message},
+            )
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
 
 
 

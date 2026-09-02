@@ -9,6 +9,12 @@
     <h1>Детали сообщения</h1>
     <p><strong>ID:</strong> {{ message.id }}</p>
     <p><strong>Сообщение:</strong> {{ message.content }}</p>
+    <h2>Изменить сообщение</h2>
+    <form action="/web/messages/{{ message.id }}" method="post">
+        <label for="content">Сообщение:</label>
+        <textarea id="content" name="content" required>{{ message.content }}</textarea>
+        <button type="submit">Изменить</button>
+    </form>
     <a href="/web/messages">Вернуться к списку</a>
 </body>
 </html>
